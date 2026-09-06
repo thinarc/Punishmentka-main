@@ -1,0 +1,13 @@
+@font-face {
+    font-family: 'Dreamer TM';
+    src: url('DreamerTM-Regular.eot');
+    src: local('Dreamer TM Regular'), local('DreamerTM-Regular'),
+        url('DreamerTM-Regular.eot?#iefix') format('embedded-opentype'),
+        url('DreamerTM-Regular.woff2') format('woff2'),
+        url('DreamerTM-Regular.woff') format('woff'),
+        url('DreamerTM-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+

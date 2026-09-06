@@ -1,0 +1,15 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!221 &22100000
+AnimatorOverrideController:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: HomeBack
+  m_Controller: {fileID: 9100000, guid: dba16e61ab65aa3449d4c2ed4c58905d, type: 2}
+  m_Clips:
+  - m_OriginalClip: {fileID: 7400000, guid: e202b762234d90643a33f01fbca7c5a3, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: 21a7221689fd50c4ab9a4ed4fb316d73, type: 2}
+  - m_OriginalClip: {fileID: 7400000, guid: 95771cffb325d5943b483fee4173d7e9, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: 515e0d2c5c9fbe549a5551785627628d, type: 2}

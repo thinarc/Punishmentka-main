@@ -1,0 +1,13 @@
+{
+    "version": 1,
+    "name": "Player",
+    "maps": [
+        {
+            "name": "Player",
+            "id": "6754fe79-ef13-4870-a431-d5f38e065627",
+            "actions": [],
+            "bindings": []
+        }
+    ],
+    "controlSchemes": []
+}

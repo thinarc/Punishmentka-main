@@ -1,0 +1,15 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!221 &22100000
+AnimatorOverrideController:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: GarageBack
+  m_Controller: {fileID: 9100000, guid: dba16e61ab65aa3449d4c2ed4c58905d, type: 2}
+  m_Clips:
+  - m_OriginalClip: {fileID: 7400000, guid: e202b762234d90643a33f01fbca7c5a3, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: 48e7e664f0fc8774bb8261a25bd3ea65, type: 2}
+  - m_OriginalClip: {fileID: 7400000, guid: 95771cffb325d5943b483fee4173d7e9, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: 9647d162fdc28c84384bdab17e2e3f90, type: 2}
