@@ -21,6 +21,10 @@ namespace _Project.Scripts
         public bool manual;
         public bool returned;
         public AudioClip pastClip;
+
+        [Header("Sound Clips")] 
+        public AudioClip blockPlaceSfx;
+        public AudioClip miniGameSuccessSfx;
         #endregion
 
         #region Lifecycle
@@ -61,6 +65,22 @@ namespace _Project.Scripts
             sfx.loop = false;
             sfx.Play();
             sfx.DOFade(1, 1f).SetEase(Ease.Linear).SetUpdate(true);
+        }
+
+        public void PlayBlockPlaceSound()
+        {
+            if (blockPlaceSfx != null)
+            {
+                PlaySfx(blockPlaceSfx, 1);
+            }
+        }
+
+        public void PlayMiniGameSuccessSound()
+        {
+            if (miniGameSuccessSfx != null)
+            {
+                PlaySfx(miniGameSuccessSfx, 1);
+            }
         }
         #endregion
 
