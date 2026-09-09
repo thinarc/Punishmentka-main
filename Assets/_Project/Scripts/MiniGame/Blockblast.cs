@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using _Project.Scripts.Interactive;
 using _Project.Scripts.Player;
+using _Project.Scripts;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using Sirenix.Utilities;
@@ -59,8 +60,8 @@ namespace _Project.Scripts.MiniGame
             SoundManager.instance.PlayMind(Resources.Load<AudioClip>("Mindgame"));
             cyclegame++;
             await RunCycle(cyclegame - 1);
-            SoundManager.instance.ReturnMind();
             UnseeView();
+        
         }
         
         public void ReInvoke()
@@ -144,10 +145,24 @@ namespace _Project.Scripts.MiniGame
                 if (!_finishFill) await ShowKeys();
                 else
                 {
+                    SoundManager.instance.mind.DOFade(0, 0.6f).SetEase(Ease.Linear).SetUpdate(true);
+
+                    await UniTask.Delay(400);
+        
+                    SoundManager.instance.PlayMiniGameSuccessSound();
+        
+                    await UniTask.Delay(2000);
+        
+                    // 5. Запускаем фоновую музыку
+                    SoundManager.instance.bg.DOFade(0, 0);
+                    SoundManager.instance.bg.Play();
+                    SoundManager.instance.bg.DOFade(0.4f, 1.5f).SetEase(Ease.Linear).SetUpdate(true);
+
                     // await ShowProgress();
                     await grid.GetComponent<CanvasGroup>().DOFade(0, 0.24f).SetEase(Ease.InOutSine).AsyncWaitForCompletion();
                     await UniTask.Delay(400);
                     await source.GetComponent<Image>().DOFade(1, 0.44f).SetEase(Ease.InOutSine).AsyncWaitForCompletion();
+        
                     _anim.ResetTrigger("Show");
                     _anim.SetTrigger("Hide");
                     _anim.enabled = true;
@@ -335,6 +350,8 @@ namespace _Project.Scripts.MiniGame
                 _finishFill = true;
                 tools.UndoWait();
             }
+            
+            SoundManager.instance.PlayBlockPlaceSound();
             
             return true;
         }
