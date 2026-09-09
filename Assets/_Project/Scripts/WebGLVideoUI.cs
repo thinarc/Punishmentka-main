@@ -90,7 +90,7 @@ namespace _Project.Scripts
             await UniTask.Delay(200);
             await FindAnyObjectByType<CalledPin>().CheckPin();
             
-            var filePath = System.IO.Path.Combine(Application.streamingAssetsPath, "shotvideo.mp4");
+            var filePath = System.IO.Path.Combine(Application.streamingAssetsPath, "c2hvdHZpZGVv.mp4");
             player.url = filePath;
             
             player.Prepare();
