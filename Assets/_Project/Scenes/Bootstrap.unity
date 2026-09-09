@@ -1012,10 +1012,8 @@ MonoBehaviour:
   - {fileID: 918994479}
   - {fileID: 1375947159}
   manual: 0
-  returned: 0
   pastClip: {fileID: 0}
-  blockPlaceSfx: {fileID: 8300000, guid: 26b794c4781244d438269f4f0a9aa128, type: 3}
-  miniGameSuccessSfx: {fileID: 8300000, guid: b07271a4f62b645f28673e010274de65, type: 3}
+  returned: 0
 --- !u!1 &918994477
 GameObject:
   m_ObjectHideFlags: 0
