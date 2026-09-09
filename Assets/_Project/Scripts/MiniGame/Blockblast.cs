@@ -149,7 +149,7 @@ namespace _Project.Scripts.MiniGame
 
                     await UniTask.Delay(400);
         
-                    // SoundManager.instance.PlayMiniGameSuccessSound();
+                    SoundManager.instance.PlayMiniGameSuccessSound();
         
                     await UniTask.Delay(2000);
         
@@ -351,7 +351,7 @@ namespace _Project.Scripts.MiniGame
                 tools.UndoWait();
             }
             
-            // SoundManager.instance.PlayBlockPlaceSound();
+            SoundManager.instance.PlayBlockPlaceSound();
             
             return true;
         }
