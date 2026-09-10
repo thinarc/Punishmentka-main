@@ -54,7 +54,7 @@ namespace _Project.Scripts
             if (mind.loop == false) mind.loop = true;
             mind.DOFade(0, 0);
             mind.Play();
-            mind.DOFade(1, fade).SetEase(Ease.Linear).SetUpdate(true);
+            mind.DOFade(0.4f, fade).SetEase(Ease.Linear).SetUpdate(true);
         }
         
         public async void ReturnMind()
@@ -67,7 +67,7 @@ namespace _Project.Scripts
             await UniTask.Delay(TimeSpan.FromSeconds(fade) / 2);
             bg.DOFade(0, 0);
             bg.Play();
-            bg.DOFade(1, fade).SetEase(Ease.Linear).SetUpdate(true);
+            bg.DOFade(0.4f, fade).SetEase(Ease.Linear).SetUpdate(true);
         }
         
         public async void PlayClip(AudioClip clip)
@@ -83,7 +83,7 @@ namespace _Project.Scripts
             await bg.DOFade(0, fade).SetEase(Ease.Linear).SetUpdate(true).AsyncWaitForCompletion();
             bg.clip = clip;
             bg.Play();
-            bg.DOFade(1, 1.8f).SetEase(Ease.Linear).SetUpdate(true);
+            bg.DOFade(0.4f, 1.8f).SetEase(Ease.Linear).SetUpdate(true);
         }
 
         public bool manual;
@@ -100,7 +100,7 @@ namespace _Project.Scripts
             bg.clip = clip;
             bg.loop = true;
             bg.Play();
-            bg.DOFade(1, 1.4f).SetEase(Ease.Linear).SetUpdate(true);
+            bg.DOFade(0.4f, 1.4f).SetEase(Ease.Linear).SetUpdate(true);
         }
 
         public AudioClip pastClip;
@@ -114,7 +114,7 @@ namespace _Project.Scripts
             bg.clip = clip;
             bg.loop = false;
             bg.Play();
-            bg.DOFade(1, 2f).SetEase(Ease.Linear).SetUpdate(true);
+            bg.DOFade(0.4f, 2f).SetEase(Ease.Linear).SetUpdate(true);
             returned = true;
             
             await UniTask.WaitWhile(() => bg.isPlaying);
@@ -123,21 +123,21 @@ namespace _Project.Scripts
             bg.loop = true;
             await bg.DOFade(0, 0.12f).SetEase(Ease.Linear).SetUpdate(true).AsyncWaitForCompletion();
             bg.Play();
-            bg.DOFade(1, 2.24f).SetEase(Ease.Linear).SetUpdate(true);
+            bg.DOFade(0.4f, 2.24f).SetEase(Ease.Linear).SetUpdate(true);
             returned = false;
         }
 
         public async UniTask PrepareFade()
         {
             const float fade = 2.12f;
-            await bg.DOFade(0.4f, fade).SetEase(Ease.Linear).SetUpdate(true).AsyncWaitForCompletion();
+            await bg.DOFade(0.16f, fade).SetEase(Ease.Linear).SetUpdate(true).AsyncWaitForCompletion();
             await sfx.DOFade(0, 0.36f).SetEase(Ease.Linear).SetUpdate(true).AsyncWaitForCompletion();
         }
         
         public void ReturnFade()
         {
             const float fade = 2.12f;
-            bg.DOFade(1, fade).SetEase(Ease.Linear).SetUpdate(true);
+            bg.DOFade(0.4f, fade).SetEase(Ease.Linear).SetUpdate(true);
         }
         
         public void PlayAfterPrepare(AudioClip clip)
