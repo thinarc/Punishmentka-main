@@ -291,7 +291,7 @@ Material:
     - _HologramMinAlpha: 0.2
     - _Hue: 0
     - _InkSpreadContrast: 2
-    - _InkSpreadDistance: -4.919379
+    - _InkSpreadDistance: -5
     - _InkSpreadFade: 0.8868637
     - _InkSpreadNoiseFactor: 0.5
     - _InkSpreadWidth: 0.2
