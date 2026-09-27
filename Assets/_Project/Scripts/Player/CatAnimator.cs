@@ -90,6 +90,9 @@ namespace _Project.Scripts
 
             // Sprite art: X > 0 (moving right) -> cat faces LEFT, hence flipX = x > 0.
             spriteRenderer.flipX = x > 0f;
+
+            bool isCloserToCam = cat.CloserToCam;
+            spriteRenderer.sortingOrder = isCloserToCam ? 51 : 49;
         }
     }
 }

@@ -13730,7 +13730,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 715954417
   m_SortingLayer: 3
-  m_SortingOrder: 50
+  m_SortingOrder: 55
   m_Sprite: {fileID: -1315781865588060153, guid: 4f214bee18cfab04b96d44aa946837e6, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -15019,6 +15019,7 @@ MonoBehaviour:
   - {fileID: 1697104743}
   - {fileID: 1392656669}
   - {fileID: 682391512}
+  - {fileID: 1782153524}
   upLayersToGarage:
   - {fileID: 1111539122}
   - {fileID: 1672408655}
@@ -27449,6 +27450,7 @@ MonoBehaviour:
   - {fileID: 660832159}
   - {fileID: 682391512}
   - {fileID: 1392656669}
+  - {fileID: 1782153524}
   menu: {fileID: 1034622184}
   menuRect: {fileID: 1034622182}
   logo: {fileID: 1437421565}
@@ -57069,7 +57071,7 @@ NavMeshAgent:
   m_GameObject: {fileID: 1782153524}
   m_Enabled: 1
   m_AgentTypeID: 0
-  m_Radius: 0.01
+  m_Radius: 0.1
   m_Speed: 0.8
   m_Acceleration: 10
   avoidancePriority: 50

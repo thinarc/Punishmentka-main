@@ -87,6 +87,7 @@ namespace _Project.Scripts
         /// eating animation doesn't start early.
         /// </summary>
         public bool IsEatingNow { get; private set; }
+        public bool CloserToCam { get; private set; }
 
         private bool _isPausing;
         private float _patrolPauseTimer;
@@ -138,6 +139,11 @@ namespace _Project.Scripts
                     UpdateOrbitingGirl();
                     break;
             }
+
+            if (transform.position.y > girl.transform.position.y && CloserToCam)
+                CloserToCam = false;
+            else if (transform.position.y < girl.transform.position.y && !CloserToCam)
+                CloserToCam = true;
         }
 
         // =========================================================
