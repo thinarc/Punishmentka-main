@@ -33,7 +33,7 @@ namespace _Project.Scripts.MiniGame
             spawned.Clear();
         }
         
-        public async UniTask InitKeys(List<Sprite> sheet, int area)
+        public async UniTask InitKeys(int area)
         {
             if (_insts != null && _insts?.Count != 0)
             {
@@ -52,76 +52,16 @@ namespace _Project.Scripts.MiniGame
             CalcUniqueForms(area, out var boxes, out var lforms, out var iforms, out var points);
 
             for (; boxes > 0; boxes--)
-            {
-                var randBox = keysBox[Random.Range(0, keysBox.Count)];
-                
-                if (TryGetAnchor(randBox, out var ax, out var ay))
-                {
-                    var instBox =Instantiate(randBox.gameObject, new Vector3(randBox.transform.position.x, randBox.transform.position.y, randBox.transform.position.z), 
-                        Quaternion.identity, randBox.transform.parent);
-                    instBox.SetActive(true);
-                    _insts.Add(instBox);
-                    spawned.Add(instBox);
-                    
-                    var localSheet = BuildSheetForKey(instBox.GetComponent<BlockblastKey>(), sheet, ax, ay);
-                    AwaitCatch(instBox.GetComponent<BlockblastKey>().Fill(localSheet));
-                }
-                else return;
-            }
-            
+                SpawnFitting(keysBox, keysL, keysI, keysPoint);
+
             for (; points > 0; points--)
-            {
-                var point = keysPoint[0];
-                
-                if (TryGetAnchor(point, out var ax, out var ay))
-                {
-                    var instBox =Instantiate(point.gameObject, new Vector3(point.transform.position.x, point.transform.position.y, point.transform.position.z), 
-                        Quaternion.identity, point.transform.parent);
-                    instBox.SetActive(true);
-                    _insts.Add(instBox);
-                    spawned.Add(instBox);
-                    
-                    var localSheet = BuildSheetForKey(instBox.GetComponent<BlockblastKey>(), sheet, ax, ay);
-                    AwaitCatch(instBox.GetComponent<BlockblastKey>().Fill(localSheet));
-                }
-                else return;
-            }
-            
+                SpawnFitting(keysPoint, keysPoint, keysPoint, keysPoint);
+
             for (; lforms > 0; lforms--)
-            {
-                var randL = keysL[Random.Range(0, keysL.Count)];
-                
-                if (TryGetAnchor(randL, out var ax, out var ay))
-                {
-                    var instBox =Instantiate(randL.gameObject, new Vector3(randL.transform.position.x, randL.transform.position.y, randL.transform.position.z), 
-                        Quaternion.identity, randL.transform.parent);
-                    instBox.SetActive(true);
-                    _insts.Add(instBox);
-                    spawned.Add(instBox);
-                    
-                    var localSheet = BuildSheetForKey(instBox.GetComponent<BlockblastKey>(), sheet, ax, ay);
-                    AwaitCatch(instBox.GetComponent<BlockblastKey>().Fill(localSheet));
-                }
-                else return;
-            }
-            
+                SpawnFitting(keysL, keysI, keysPoint, keysPoint);
+
             for (; iforms > 0; iforms--)
-            {
-                var randI = keysI[Random.Range(0, keysI.Count)];
-                
-                if (TryGetAnchor(randI, out var ax, out var ay))
-                {
-                    var instBox =Instantiate(randI.gameObject, new Vector3(randI.transform.position.x, randI.transform.position.y, randI.transform.position.z), 
-                        Quaternion.identity, randI.transform.parent);
-                    instBox.SetActive(true);
-                    _insts.Add(instBox);
-                    spawned.Add(instBox);
-                    
-                    var localSheet = BuildSheetForKey(instBox.GetComponent<BlockblastKey>(), sheet, ax, ay);
-                    AwaitCatch(instBox.GetComponent<BlockblastKey>().Fill(localSheet));
-                }
-                else return;
-            }
+                SpawnFitting(keysI, keysL, keysPoint, keysPoint);
 
             _waiting = true;
             await UniTask.WaitUntil(() =>
@@ -152,50 +92,39 @@ namespace _Project.Scripts.MiniGame
         public bool TryGetCellPosition(Vector2 screenPos, Camera cam, out Vector2Int cell) =>
             blockblast.TryGetCellPosition(screenPos, cam, out cell);
         public bool TryPlace(Vector2Int origin, Vector2Int[] cells) => blockblast.TryPlace(origin, cells);
+        public bool CanPlace(Vector2Int origin, Vector2Int[] cells) => blockblast.CanPlace(origin, cells);
         public Vector3 GetWorldFromCell(Vector2Int cell) => blockblast.GetWorldFromCell(cell);
-        
-        private static Sprite CalcSprite(List<Sprite> sheet, int x, int y) => sheet[y * 8 + x];
-        
-        private static Sprite[] BuildSheetForKey(BlockblastKey key, List<Sprite> sheet, int anchorX, int anchorY)
+        public BlockblastKey GetPointKey(Vector2Int cell) => blockblast.GetPointKey(cell);
+
+        private void SpawnFitting(List<BlockblastKey> primary, List<BlockblastKey> fallback1, List<BlockblastKey> fallback2, List<BlockblastKey> fallback3)
         {
-            var cells = key.GetCells();
-            var result = new Sprite[cells.Length];
-
-            for (var i = 0; i < cells.Length; i++)
-            {
-                var px = anchorX + cells[i].x;
-                var py = anchorY + cells[i].y;
-
-                result[i] = CalcSprite(sheet, px, py);
-            }
-            return result;
+            var key = PickFitting(primary) ?? PickFitting(fallback1) ?? PickFitting(fallback2) ?? PickFitting(fallback3);
+            if (key == null) return;
+            Spawn(key);
         }
-        
-        private static bool TryGetAnchor(BlockblastKey key, out int ax, out int ay)
+
+        private BlockblastKey PickFitting(List<BlockblastKey> keys)
         {
-            var cells = key.GetCells();
+            if (keys == null || keys.Count == 0) return null;
 
-            var maxX = 0;
-            var maxY = 0;
-            
-            foreach (var c in cells)
+            var shuffled = keys.OrderBy(_ => Random.value).ToList();
+            foreach (var key in shuffled)
             {
-                if (c.x > maxX) maxX = c.x;
-                if (c.y > maxY) maxY = c.y;
+                if (blockblast.HasFit(key.GetCells()))
+                    return key;
             }
 
-            var limitX = 8 - (maxX + 1);
-            var limitY = 8 - (maxY + 1);
+            return null;
+        }
 
-            if (limitX < 0 || limitY < 0)
-            {
-                ax = ay = 0;
-                return false;
-            }
+        private void Spawn(BlockblastKey template)
+        {
+            var inst = Instantiate(template.gameObject, template.transform.position, Quaternion.identity, template.transform.parent);
+            inst.SetActive(true);
+            _insts.Add(inst);
+            spawned.Add(inst);
 
-            ax = Random.Range(0, limitX + 1);
-            ay = Random.Range(0, limitY + 1);
-            return true;
+            AwaitCatch(inst.GetComponent<BlockblastKey>().Fill());
         }
 
         private static void CalcUniqueForms(int area, out int boxes, out int lforms, out int iforms, out int points)

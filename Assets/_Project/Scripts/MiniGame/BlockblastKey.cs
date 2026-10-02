@@ -14,7 +14,7 @@ namespace _Project.Scripts.MiniGame
         private Vector2Int[] _cells;
         
         public BlockForm BlockForm => blockForm;
-        public Vector2Int[] Cells => _cells;
+        public Vector2Int[] Cells => _cells ??= CalcForm(blockForm);
 
         [Header("Debug")]
         [SerializeField, Space(5)] private List<Image> squares;
@@ -32,12 +32,48 @@ namespace _Project.Scripts.MiniGame
             GetComponent<CanvasGroup>().DOFade(0, 0.4f).SetEase(Ease.InOutSine);
         }
 
-        public void Show()
+        public void ShowBlock()
+        {
+            if (!gridElement) return;
+            anim ??= GetComponent<Animator>();
+            anim.SetBool("Catch", false);
+            GetComponent<CanvasGroup>().DOFade(1, 0.4f).SetEase(Ease.InOutSine);
+        }
+
+        public void RevealPhoto()
         {
             if (!gridElement) return;
             anim ??= GetComponent<Animator>();
             anim.SetBool("Catch", true);
-            GetComponent<CanvasGroup>().DOFade(1, 0.4f).SetEase(Ease.InOutSine);
+        }
+
+        private CanvasGroup _canvasGroup;
+        private Image _photoImage;
+        private float _preAlpha;
+        private bool _previewing;
+
+        public void Preview(bool valid)
+        {
+            if (!gridElement) return;
+            _canvasGroup ??= GetComponent<CanvasGroup>();
+            _photoImage ??= GetComponentInChildren<Image>();
+
+            if (!_previewing)
+            {
+                _previewing = true;
+                _preAlpha = _canvasGroup.alpha;
+            }
+
+            _canvasGroup.alpha = 0.55f;
+            _photoImage.color = valid ? Color.white : new Color(1f, 0.35f, 0.35f, 1f);
+        }
+
+        public void ClearPreview()
+        {
+            if (!_previewing) return;
+            _previewing = false;
+            _photoImage.color = Color.white;
+            _canvasGroup.alpha = _preAlpha;
         }
 
         public Vector2Int[] GetCells()
@@ -46,19 +82,13 @@ namespace _Project.Scripts.MiniGame
             return _cells;
         }
 
-        public async UniTask Fill(Sprite[] sheet)
+        public async UniTask Fill()
         {
             var cells = GetComponentsInChildren<RectTransform>()[1];
             if (cells.name != "Cells") throw new Exception("Cells not found");
-            var index = 0;
-            
+
             squares = cells.GetComponentsInChildren<Image>().ToList();
-            squares.ForEach(s =>
-            {
-                s.sprite = sheet[index];
-                index++;
-            });
-            
+
             anim ??= GetComponent<Animator>();
             if (anim == null) return;
             await UniTask.WaitUntil(() =>

@@ -5,7 +5,6 @@ using _Project.Scripts.Interactive;
 using _Project.Scripts.Player;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
-using Sirenix.Utilities;
 using UnityEngine;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
@@ -16,14 +15,12 @@ namespace _Project.Scripts.MiniGame
     {
         [SerializeField] private RectTransform source;
         [SerializeField] private RectTransform grid;
-        [SerializeField, Space(5)] private float cellSize;
-        
+
         [SerializeField, Space(5)] private BlockblastTools tools;
         
         private Animator _anim;
 
         [Header("Debug")]
-        [SerializeField, Space(5)] private List<Sprite> sheet;
         [SerializeField] private List<BlockblastKey> points;
         private bool[,] _shape = new bool[8, 8];
 
@@ -110,7 +107,6 @@ namespace _Project.Scripts.MiniGame
         {
             _anim.ResetTrigger("Show");
             _anim.ResetTrigger("Hide");
-            sheet.Clear();
             _finishFill = false;
             _hideEnd = false;
             progress.value = 0;
@@ -130,7 +126,6 @@ namespace _Project.Scripts.MiniGame
             var sprites = GetPhoto(photo);
             source.GetComponent<Image>().sprite = GetPhoto(photo, true)[0];
             source.GetComponent<Image>().DOFade(0, 0);
-            sprites.ForEach(s => sheet.Add(s));
             points = grid.GetComponentsInChildren<BlockblastKey>().ToList();
             var i = 0;
             points.ForEach(p =>
@@ -229,10 +224,11 @@ namespace _Project.Scripts.MiniGame
         public async UniTask ShowKeys()
         {
             _cycle++;
+            var effectiveCycle = _cycle + Mathf.RoundToInt(GetProgress() * 6f);
             var randSquare = Random.Range(5, 13);
-            if (_cycle > 3 && _cycle < 4) randSquare = Random.Range(4, 11);
-            if (_cycle > 4) randSquare = Random.Range(3, 10);
-            var wait = tools.InitKeys(sheet, randSquare);
+            if (effectiveCycle > 3 && effectiveCycle < 4) randSquare = Random.Range(4, 11);
+            if (effectiveCycle > 4) randSquare = Random.Range(3, 10);
+            var wait = tools.InitKeys(randSquare);
             await tools.GetComponent<CanvasGroup>().DOFade(0, 0).AsyncWaitForCompletion();
             tools.GetComponent<CanvasGroup>().DOFade(1f, 0.4f).SetEase(Ease.InOutSine);
             await wait;
@@ -241,85 +237,79 @@ namespace _Project.Scripts.MiniGame
         public bool TryGetCellPosition(Vector2 screenPos, Camera cam, out Vector2Int cell)
         {
             cell = default;
-            
-            screenPos.y += 92f;
-            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(source, screenPos, cam, out var local)) return false;
-            local.y *= -1;
-            
-            local.x += source.rect.width / 2;
-            local.y += source.rect.height;
 
-            var x = Mathf.FloorToInt(local.x * cellSize) - 1;
-            var y = Mathf.FloorToInt(local.y * cellSize) - 1;
-
-            if (x < 0 || y < 0 || x >= 8 || y >= 8)
+            if (points == null || points.Count != 8 * 8)
                 return false;
 
-            cell = new Vector2Int(x, y);
+            for (var i = 0; i < points.Count; i++)
+            {
+                var point = points[i];
+                if (point == null) continue;
+
+                var pointRect = point.GetComponent<RectTransform>();
+                if (pointRect == null) continue;
+
+                if (!RectTransformUtility.RectangleContainsScreenPoint(pointRect, screenPos, cam))
+                    continue;
+
+                cell = new Vector2Int(i % 8, i / 8);
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool CanPlace(Vector2Int origin, Vector2Int[] cells)
+        {
+            if (cells == null || cells.Length == 0)
+                return false;
+
+            foreach (var cell in cells)
+            {
+                var target = origin + cell;
+
+                if (target.x < 0 || target.y < 0 || target.x >= 8 || target.y >= 8)
+                    return false;
+
+                if (_shape[target.x, target.y])
+                    return false;
+            }
+
             return true;
         }
-        
-        public bool TryPlace(Vector2Int origin, Vector2Int[] cells)
+
+        public bool HasFit(Vector2Int[] cells)
         {
-            foreach (var c in cells)
-            {
-                var x = origin.x + c.x;
-                if (x is < 0 or >= 8) x = origin.x - c.x;
-                var y = origin.y + c.y;
-                if (y is < 0 or >= 8) y = origin.y - c.y;
-                
-                if (x < 0 || y < 0 || x >= 8 || y >= 8)
-                    return false;
-                
-                // if (_shape[x, y])
-                //     return false;
-            }
+            if (cells == null || cells.Length == 0)
+                return false;
 
-            foreach (var c in cells)
+            for (var y = 0; y < 8; y++)
             {
-                var x = origin.x + c.x;
-                if (x is < 0 or >= 8) x = origin.x - c.x;
-                var y = origin.y + c.y;
-                if (y is < 0 or >= 8) y = origin.y - c.y;
-                _shape[x, y] = true;
-                points[x + y * 8].Show();
-            }
-
-            List<int> free = new();
-
-            // собрать все свободные клетки
-            for (int y = 0; y < 8; y++)
-            {
-                for (int x = 0; x < 8; x++)
+                for (var x = 0; x < 8; x++)
                 {
-                    if (!_shape[x, y])
-                        free.Add(x + y * 8);
+                    if (CanPlace(new Vector2Int(x, y), cells))
+                        return true;
                 }
             }
 
-            // перемешать
-            for (int i = 0; i < free.Count; i++)
+            return false;
+        }
+
+        public bool TryPlace(Vector2Int origin, Vector2Int[] cells)
+        {
+            if (!CanPlace(origin, cells))
+                return false;
+
+            var targets = new Vector2Int[cells.Length];
+            for (var i = 0; i < cells.Length; i++)
+                targets[i] = origin + cells[i];
+
+            foreach (var target in targets)
             {
-                int rnd = Random.Range(i, free.Count);
-                (free[i], free[rnd]) = (free[rnd], free[i]);
+                _shape[target.x, target.y] = true;
+                points[target.x + target.y * 8].ShowBlock();
             }
 
-            // взять первые addes
-            int count = Mathf.Min(Random.Range(4, 8), free.Count);
-            var predict = free.Count - count;
-            if (predict > 0 && predict < 7)
-                count = free.Count;
-
-            for (int i = 0; i < count; i++)
-            {
-                int index = free[i];
-                int x = index % 8;
-                int y = index / 8;
-
-                _shape[x, y] = true;
-                points[index].Show();
-            }
-            
             bool allFilled = true;
             for (int y = 0; y < 8; y++)
             {
@@ -335,30 +325,83 @@ namespace _Project.Scripts.MiniGame
                 _finishFill = true;
                 tools.UndoWait();
             }
-            
+
+            ClearCompletedLines();
+
             return true;
         }
 
+        private void ClearCompletedLines()
+        {
+            var toClear = new HashSet<int>();
+
+            for (var y = 0; y < 8; y++)
+            {
+                var full = true;
+                for (var x = 0; x < 8; x++)
+                {
+                    if (!_shape[x, y]) { full = false; break; }
+                }
+                if (full)
+                {
+                    for (var x = 0; x < 8; x++)
+                        toClear.Add(x + y * 8);
+                }
+            }
+
+            for (var x = 0; x < 8; x++)
+            {
+                var full = true;
+                for (var y = 0; y < 8; y++)
+                {
+                    if (!_shape[x, y]) { full = false; break; }
+                }
+                if (full)
+                {
+                    for (var y = 0; y < 8; y++)
+                        toClear.Add(x + y * 8);
+                }
+            }
+
+            foreach (var index in toClear)
+            {
+                var x = index % 8;
+                var y = index / 8;
+                _shape[x, y] = false;
+                points[index].RevealPhoto();
+            }
+        }
+
         private bool _finishFill;
-        
+
         public Vector3 GetWorldFromCell(Vector2Int cell)
         {
-            var x = cell.x / cellSize;
-            var y = 56 - cell.y / cellSize;
+            if (cell.x < 0 || cell.y < 0 || cell.x >= 8 || cell.y >= 8 ||
+                points == null || points.Count != 8 * 8)
+                return grid.position;
 
-            var local = new Vector2(x, y);
-            
-            local.x -= source.rect.width * source.pivot.x;
-            local.y -= source.rect.height * source.pivot.y;
-            if (local.x < 0) local.x += 8;
-            if (local.y < 0) local.y += 8;
-
-            return source.TransformPoint(local);
+            return points[cell.x + cell.y * 8].transform.position;
         }
-        
+
+        public BlockblastKey GetPointKey(Vector2Int cell)
+        {
+            if (cell.x < 0 || cell.y < 0 || cell.x >= 8 || cell.y >= 8 ||
+                points == null || points.Count != 8 * 8)
+                return null;
+
+            return points[cell.x + cell.y * 8];
+        }
+
         private void OnDrawGizmosSelected()
         {
-            var topLeft = new Vector3(source.rect.xMin, source.rect.yMax);
+            if (grid == null) return;
+            var layout = grid.GetComponent<GridLayoutGroup>();
+            if (layout == null) return;
+
+            var rect = grid.rect;
+            var pitch = layout.cellSize + layout.spacing;
+            var topLeftX = rect.xMin + layout.padding.left;
+            var topLeftY = rect.yMax - layout.padding.top;
 
             for (var y = 0; y < 8; y++)
             {
@@ -366,12 +409,13 @@ namespace _Project.Scripts.MiniGame
                 {
                     Gizmos.color = _shape[x, y] ? Color.red : Color.green;
 
-                    var pos = topLeft;
-                    pos += new Vector3(cellSize * 32, cellSize * -32);
-                    pos += new Vector3(x * cellSize * 64, y * cellSize * -64);
-                    pos = source.TransformPoint(pos);
+                    var local = new Vector3(
+                        topLeftX + x * pitch.x + layout.cellSize.x / 2f,
+                        topLeftY - y * pitch.y - layout.cellSize.y / 2f);
 
-                    Gizmos.DrawCube(pos, new Vector3(cellSize, cellSize));
+                    var pos = grid.TransformPoint(local);
+
+                    Gizmos.DrawCube(pos, new Vector3(layout.cellSize.x, layout.cellSize.y, 0.01f));
                 }
             }
         }
