@@ -113,6 +113,7 @@ namespace _Project.Scripts.MiniGame
             targetProgress = 0;
             _startValue = 0;
             _elapsed = 0;
+            RollProgressThresholds();
             _cycle = 0;
             tools.ResetKeys();
             _shape = new bool[8, 8];
@@ -179,21 +180,68 @@ namespace _Project.Scripts.MiniGame
         }
         private float targetProgress;
 
+        [SerializeField] private int minShowsPerCycle = 3;
+        [SerializeField] private int maxShowsPerCycle = 5;
+        private readonly List<float> _progressThresholds = new();
+        private int _nextThreshold;
+
+        // Picks how many times (minShowsPerCycle..maxShowsPerCycle, inclusive)
+        // the progress bar will pop up over this whole picture cycle, then lays
+        // out that many random, increasing progress thresholds to pop at. The
+        // last threshold is left implicit - the finishing 100% (_finishFill) is
+        // always shown regardless, so only showCount-1 thresholds are rolled here.
+        private void RollProgressThresholds()
+        {
+            _progressThresholds.Clear();
+            _nextThreshold = 0;
+
+            var showCount = Random.Range(minShowsPerCycle, maxShowsPerCycle + 1);
+            var nonFinalShows = showCount - 1;
+            if (nonFinalShows <= 0) return;
+
+            var segment = 1f / showCount;
+            for (var i = 1; i <= nonFinalShows; i++)
+            {
+                var jitter = Random.Range(-0.4f, 0.4f) * segment;
+                _progressThresholds.Add(Mathf.Clamp01(i * segment + jitter));
+            }
+            _progressThresholds.Sort();
+        }
+
         public async UniTask ShowProgress(bool start = false)
         {
-            if (start) 
+            if (start)
             {
                 progress.gameObject.SetActive(false);
                 return;
+            }
+
+            // By the time the final batch finishes, ClearCompleted() has already
+            // reset _shape back to empty to start the reveal - so GetProgress()
+            // would read back 0 here. The board being fully filled is exactly
+            // what _finishFill means, so the target is trivially 100%.
+            var currentProgress = _finishFill ? 1f : GetProgress();
+
+            // Only pop the bar when a rolled threshold is actually crossed (so it
+            // shows ~minShowsPerCycle..maxShowsPerCycle times per cycle instead of
+            // on every batch), plus always on the finishing 100%. A jump that
+            // crosses several thresholds at once still only shows once.
+            if (!_finishFill)
+            {
+                if (_nextThreshold >= _progressThresholds.Count || currentProgress < _progressThresholds[_nextThreshold])
+                    return;
+
+                while (_nextThreshold < _progressThresholds.Count && currentProgress >= _progressThresholds[_nextThreshold])
+                    _nextThreshold++;
             }
 
             progress.GetComponent<CanvasGroup>().DOFade(0, 0);
             progress.gameObject.SetActive(true);
             await progress.GetComponent<CanvasGroup>().DOFade(1f, 0.4f).SetEase(Ease.InOutSine).AsyncWaitForCompletion();
             _startValue = progress.value;
-            targetProgress = GetProgress();
+            targetProgress = currentProgress;
             _elapsed = 0f;
-            
+
             await UniTask.WaitUntil(() => Mathf.Approximately(progress.value, targetProgress));
             await UniTask.Delay(200);
             await progress.GetComponent<CanvasGroup>().DOFade(0f, 0.4f).SetEase(Ease.InOutSine).AsyncWaitForCompletion();
@@ -295,6 +343,31 @@ namespace _Project.Scripts.MiniGame
             return false;
         }
 
+        // Snapshot of the occupied grid, used to simulate a whole batch of
+        // not-yet-spawned blocks before committing to it (see BlockblastTools).
+        public bool[,] CloneShape()
+        {
+            var clone = new bool[8, 8];
+            Array.Copy(_shape, clone, _shape.Length);
+            return clone;
+        }
+
+        public static bool CanPlaceOn(bool[,] grid, Vector2Int origin, Vector2Int[] cells)
+        {
+            foreach (var cell in cells)
+            {
+                var target = origin + cell;
+
+                if (target.x < 0 || target.y < 0 || target.x >= 8 || target.y >= 8)
+                    return false;
+
+                if (grid[target.x, target.y])
+                    return false;
+            }
+
+            return true;
+        }
+
         public bool TryPlace(Vector2Int origin, Vector2Int[] cells)
         {
             if (!CanPlace(origin, cells))
@@ -326,49 +399,31 @@ namespace _Project.Scripts.MiniGame
                 tools.UndoWait();
             }
 
-            ClearCompletedLines();
+            ClearCompleted();
 
             return true;
         }
 
-        private void ClearCompletedLines()
+        private void ClearCompleted()
         {
-            var toClear = new HashSet<int>();
-
             for (var y = 0; y < 8; y++)
             {
-                var full = true;
                 for (var x = 0; x < 8; x++)
                 {
-                    if (!_shape[x, y]) { full = false; break; }
-                }
-                if (full)
-                {
-                    for (var x = 0; x < 8; x++)
-                        toClear.Add(x + y * 8);
+                    if (!_shape[x, y])
+                        return;
                 }
             }
-
-            for (var x = 0; x < 8; x++)
+            
+            for (var y = 0; y < 8; y++)
             {
-                var full = true;
-                for (var y = 0; y < 8; y++)
+                for (var x = 0; x < 8; x++)
                 {
-                    if (!_shape[x, y]) { full = false; break; }
-                }
-                if (full)
-                {
-                    for (var y = 0; y < 8; y++)
-                        toClear.Add(x + y * 8);
-                }
-            }
+                    _shape[x, y] = false;
 
-            foreach (var index in toClear)
-            {
-                var x = index % 8;
-                var y = index / 8;
-                _shape[x, y] = false;
-                points[index].RevealPhoto();
+                    var index = x + y * 8;
+                    points[index].RevealPhoto();
+                }
             }
         }
 

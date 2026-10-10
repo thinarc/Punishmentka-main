@@ -29,6 +29,7 @@ namespace _Project.Scripts.MiniGame
             anim ??= GetComponent<Animator>();
             anim.SetBool("Drag", true);
             anim.SetBool("Catch", false);
+            anim.SetBool("Placed", false);
             GetComponent<CanvasGroup>().DOFade(0, 0.4f).SetEase(Ease.InOutSine);
         }
 
@@ -36,7 +37,8 @@ namespace _Project.Scripts.MiniGame
         {
             if (!gridElement) return;
             anim ??= GetComponent<Animator>();
-            anim.SetBool("Catch", false);
+            anim.SetBool("Catch", true);
+            anim.SetBool("Placed", true);
             GetComponent<CanvasGroup>().DOFade(1, 0.4f).SetEase(Ease.InOutSine);
         }
 

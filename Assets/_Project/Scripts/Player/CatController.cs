@@ -349,8 +349,8 @@ namespace _Project.Scripts
                     break;
             }
 
-            if (debugLogs)
-                Debug.Log($"[Cat] -> {newState}", this);
+            // if (debugLogs)
+                // Debug.Log($"[Cat] -> {newState}", this);
 
             StateChanged?.Invoke(newState);
         }
@@ -402,7 +402,7 @@ namespace _Project.Scripts
 
             if (agent.pathStatus == NavMeshPathStatus.PathInvalid)
                 return true;
-
+            
             return agent.remainingDistance <= agent.stoppingDistance + ArrivalTolerance;
         }
 

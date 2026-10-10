@@ -73,8 +73,14 @@ namespace _Project.Scripts.MiniGame
 
             var group = GetComponent<CanvasGroup>();
             if (group == null) group = gameObject.AddComponent<CanvasGroup>();
-            group.DOFade(0, 0.3f).SetEase(Ease.InOutSine)
-                .OnComplete(() => Destroy(gameObject));
+            group.interactable = false;
+            group.blocksRaycasts = false;
+            // Stay a child of the tray (and keep its layout slot) instead of being
+            // destroyed right away - destroying it here would make the Horizontal
+            // Layout Group recenter whatever pieces are left in the batch. It's
+            // actually removed once the whole batch has been placed, at the start
+            // of the next InitKeys call.
+            group.DOFade(0, 0.3f).SetEase(Ease.InOutSine);
         }
 
         private void UpdatePreview(PointerEventData eventData)
